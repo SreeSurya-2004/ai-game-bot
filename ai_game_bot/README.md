@@ -4,7 +4,8 @@ A mini-project for students: a friendly Streamlit UI with multiple simple games 
 
 ## Features
 - Rock–Paper–Scissors: learns your transition patterns (what you play after a previous move) and counters them
-- GridWorld 4x4: learns from your trajectory to reach the goal faster
+- Coin Flip Predictor: learns your heads/tails transition tendencies and predicts next
+- Dice Predictor: learns your roll transitions (1–6) and predicts next
 - Per-game model persistence to `models/`
 - Clean, beginner-friendly UI, configurable learning hyperparameters
 
@@ -24,7 +25,7 @@ streamlit run app.py
 ## How it works (brief)
 - Q-learning agent stores a Q-table mapping state-action pairs to values.
 - For RPS, the state is your previous move (or START). Training rewards the counter-move for your next move.
-- For GridWorld, your recorded trajectory (state, action, reward) updates the Q-table.
+- For Coin Flip and Dice, the state is your previous outcome (or START). Training rewards the actual next outcome you produced.
 - The bot then picks greedy actions (with low exploration) and suggests better moves by comparing your actions to its argmax policy.
 
 ## Project structure
@@ -36,7 +37,8 @@ ai_game_bot/
     q_learning.py
   games/
     rps.py
-    gridworld.py
+    coinflip.py
+    dice.py
   utils/
     storage.py
   models/                # created at runtime
