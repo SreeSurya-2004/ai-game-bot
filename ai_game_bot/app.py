@@ -2,13 +2,22 @@ from __future__ import annotations
 
 import streamlit as st
 
-from games import rps, gridworld
+from games import rps, coinflip, dice
 from utils.storage import clear_model
 
 
 def sidebar():
     st.sidebar.title("AI Game Bot (RL)")
-    page = st.sidebar.radio("Choose a page", ["Home", "Rock-Paper-Scissors", "GridWorld", "Models"])
+    page = st.sidebar.radio(
+        "Choose a page",
+        [
+            "Home",
+            "Rock-Paper-Scissors",
+            "Coin Flip",
+            "Dice Predictor",
+            "Models",
+        ],
+    )
     return page
 
 
@@ -19,27 +28,33 @@ def home_page():
     )
     st.markdown(
         "- Rock–Paper–Scissors: bot learns your transition patterns.\n"
-        "- GridWorld: bot learns optimal moves from your trajectory to the goal."
+        "- Coin Flip Predictor: bot predicts your next heads/tails based on your sequence.\n"
+        "- Dice Predictor: bot predicts your next dice face from your roll history."
     )
 
 
 def models_page():
     st.header("Model management")
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     with col1:
         if st.button("Reset RPS model"):
             clear_model("rps")
             st.success("RPS model cleared")
     with col2:
-        if st.button("Reset GridWorld model"):
-            clear_model("gridworld")
-            st.success("GridWorld model cleared")
+        if st.button("Reset Coin Flip model"):
+            clear_model("coinflip")
+            st.success("Coin Flip model cleared")
+    with col3:
+        if st.button("Reset Dice model"):
+            clear_model("dice")
+            st.success("Dice model cleared")
 
 
 PAGE_MAP = {
     "Home": home_page,
     "Rock-Paper-Scissors": rps.run,
-    "GridWorld": gridworld.run,
+    "Coin Flip": coinflip.run,
+    "Dice Predictor": dice.run,
     "Models": models_page,
 }
 
