@@ -1,5 +1,6 @@
 AI Game Bot using Reinforcement Learning
-A mini-project for students: a friendly Streamlit UI with multiple simple games where a bot learns from your gameplay using tabular Q-learning, then plays against you and offers suggestions.
+A mini-project for students:
+A friendly Streamlit UI with multiple simple games where a bot learns from your gameplay using tabular Q-learning, then plays against you and offers suggestions.
 
 Features
 Rock–Paper–Scissors: learns your transition patterns (what you play after a previous move) and counters them
