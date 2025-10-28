@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import random
 from typing import Dict, List, Tuple
-
-import numpy as np
 import streamlit as st
 
 from agents.q_learning import QLearningAgent
