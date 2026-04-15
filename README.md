@@ -1,6 +1,6 @@
 # AI Game Platform using Reinforcement Learning
 
-A mini-project for students: a friendly web-based game platform where an AI bot learns from gameplay using tabular Q-learning and gives hints in real time. This project is built with Flask and Flask-SocketIO, and currently supports multiple simple games through a browser interface.
+An interactive browser-based game platform that demonstrates how reinforcement learning can enhance gameplay through intelligent, real-time hints. Built with Flask and Flask-SocketIO, this project features a Q-learning powered AI bot that learns from player interactions, improves over time, and provides move suggestions across classic games like Tic-Tac-Toe, Memory Game, and Snake.
 
 ## Features
 
