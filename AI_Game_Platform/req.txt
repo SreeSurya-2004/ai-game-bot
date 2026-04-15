@@ -1,0 +1,31 @@
+to run enter this 
+
+python app.py
+---------------------------------------
+
+folder structure 
+
+AI_Game_Platform/
+│
+├── app.py                  # Flask backend
+├── ai_bot.py               # AI bot logic (training & hints)
+├── requirements.txt        # Python dependencies
+├── static/
+│   ├── style.css           # CSS file
+│   └── script.js           # Frontend JS
+└── templates/
+    ├── index.html          # Home page (game selection)
+    └── game.html           # Game interface
+
+-----------------------------------------------------
+run this to install
+---
+
+pip install -r requirements.txt
+
+-----------------------------------------------------
+then copy and paste this in browser
+
+http://127.0.0.1:5000/
+
+-----------------------------------------------------

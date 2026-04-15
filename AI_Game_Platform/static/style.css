@@ -1,0 +1,128 @@
+/* --- General Page Styles --- */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(120deg, #f6d365, #fda085);
+    min-height: 100vh;
+    margin: 0;
+}
+
+h1 {
+    color: #fff;
+    font-size: 3em;
+    text-shadow: 2px 2px #444;
+    margin-bottom: 20px;
+}
+
+h3 {
+    color: #fff;
+    margin-bottom: 20px;
+}
+
+/* --- Game Links --- */
+ul {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+ul li a {
+    display: inline-block;
+    padding: 15px 30px;
+    font-size: 1.2em;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+ul li a:hover {
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+/* --- Buttons --- */
+button {
+    padding: 12px 25px;
+    margin: 5px;
+    font-size: 1.1em;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    background: linear-gradient(45deg, #ff6a00, #ee0979);
+    color: #fff;
+    font-weight: bold;
+}
+
+button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+/* --- Tic-Tac-Toe Cells --- */
+.cell {
+    width: 70px;
+    height: 70px;
+    font-size: 2em;
+    margin: 5px;
+    border-radius: 12px;
+    border: 2px solid #fff;
+    background: linear-gradient(145deg, #43e97b, #38f9d7);
+    color: #fff;
+    font-weight: bold;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.cell:hover {
+    transform: scale(1.1);
+    background: linear-gradient(145deg, #38f9d7, #43e97b);
+}
+
+/* --- Sudoku Cells --- */
+input.sudokuCell {
+    width: 60px;
+    height: 60px;
+    text-align: center;
+    font-size: 1.5em;
+    margin: 3px;
+    border-radius: 8px;
+    border: 2px solid #fff;
+    background: linear-gradient(145deg, #fbc2eb, #a6c1ee);
+    color: #333;
+    font-weight: bold;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+input.sudokuCell:focus {
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    outline: none;
+}
+
+/* --- Tables --- */
+table {
+    margin: 0 auto;
+    border-collapse: collapse;
+}
+
+/* --- AI Hint Display --- */
+#aiHint {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 1px 1px #444;
+}
+
+/* --- RPS Result --- */
+#rpsResult {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #fff;
+    margin-top: 15px;
+    text-shadow: 1px 1px #444;
+}

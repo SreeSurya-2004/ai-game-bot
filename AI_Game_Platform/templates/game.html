@@ -1,0 +1,267 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Game - {{ game_name }}</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; margin: 16px; }
+    header { display:flex; align-items:center; gap:12px; }
+    h1 { margin:0 8px 0 0; font-size:1.1rem; }
+    nav button { padding:8px 12px; border-radius:6px; border:1px solid #888; background:#f3f3f3; cursor:pointer; }
+    nav button.active { background:#2b7cff; color:white; border-color:#1e5ecf; }
+    #gameArea { margin-top:16px; min-height:240px; }
+    /* tic tac toe */
+    .board { display:grid; grid-template-columns:repeat(3,100px); gap:6px; }
+    .cell { width:100px; height:100px; display:flex;align-items:center;justify-content:center;font-size:36px;border-radius:6px;border:1px solid #333; cursor:pointer; background:#fff; transition: box-shadow .12s, transform .12s; }
+    .cell.hint { box-shadow: 0 0 0 4px rgba(43,124,255,0.14); transform: translateY(-2px); }
+    /* memory */
+    .memory-grid { display:grid; grid-template-columns:repeat(4,80px); gap:8px; }
+    .card { width:80px; height:80px; display:flex; align-items:center; justify-content:center; font-size:22px; background:#ececec; border-radius:6px; cursor:pointer; transition: box-shadow .12s; }
+    .card.hint { box-shadow: 0 0 0 4px rgba(43,124,255,0.14); transform: translateY(-2px); }
+    /* snake (simple) */
+    #snakeCanvas { background:#000; border-radius:6px; display:block; }
+    #aiHint { font-weight:600; color:#2b2b2b; margin-left:8px; }
+    .hint-panel { margin-top:8px; color:#2b7cff; font-weight:600; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Game: <span id="title">{{ game_name }}</span></h1>
+    <nav id="gameNav" aria-label="games"></nav>
+    <div style="margin-left:auto">AI Hint: <span id="aiHint"></span></div>
+  </header>
+
+  <div id="gameArea"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const incoming = "{{ game_name }}";
+    const normalize = s => (s||'').replace(/[-_\s]/g,'').toLowerCase();
+
+    const supported = {
+      tictactoe: { title: 'Tic Tac Toe', render: renderTicTacToe },
+      memory:    { title: 'Memory Match', render: renderMemory },
+      snake:     { title: 'Snake (simple)', render: renderSnake }
+    };
+
+    const container = document.getElementById('gameArea');
+    const nav = document.getElementById('gameNav');
+    const titleEl = document.getElementById('title');
+    const hintEl = document.getElementById('aiHint');
+    const socket = (window.io ? io() : null);
+
+    if(socket){
+      socket.on('bot_hint', data => {
+        const hint = (data && data.hint) ? data.hint : data;
+        displayHint(hint);
+      });
+    }
+
+    function setActive(name){
+      container.innerHTML = '';
+      titleEl.innerText = supported[name].title || name;
+      Array.from(nav.children).forEach(b => b.classList.toggle('active', b.dataset.game === name));
+      supported[name].render(container);
+    }
+
+    Object.keys(supported).forEach(key => {
+      const btn = document.createElement('button');
+      btn.innerText = supported[key].title;
+      btn.dataset.game = key;
+      btn.addEventListener('click', () => setActive(key));
+      nav.appendChild(btn);
+    });
+
+    const initial = normalize(incoming);
+    const start = supported[initial] ? initial : 'tictactoe';
+    setActive(start);
+
+    // ---------- Helpers for hint parsing & applying ----------
+    function tryParseHint(hint){
+      if(!hint) return null;
+      if(typeof hint === 'object') return hint;
+      try { return JSON.parse(hint); } catch(e) { return { text: String(hint) }; }
+    }
+
+    function clearHints(){
+      document.querySelectorAll('.hint').forEach(el => el.classList.remove('hint'));
+    }
+
+    function displayHint(raw){
+      hintEl.innerText = '';
+      clearHints();
+      const h = tryParseHint(raw);
+      if(!h) return;
+      // structured hint: { game: 'tictactoe', suggestion: { index: 4, reason: 'block' }, text: '...' }
+      if(h.text) hintEl.innerText = h.text;
+      if(h.suggestion && h.game){
+        if(h.game === 'tictactoe' && typeof h.suggestion.index !== 'undefined'){
+          const cell = document.querySelector(`.board .cell[data-index="${h.suggestion.index}"]`);
+          if(cell) cell.classList.add('hint');
+          hintEl.innerText = h.text || ('Try cell ' + h.suggestion.index);
+        }
+        if(h.game === 'memory' && typeof h.suggestion.index !== 'undefined'){
+          const card = document.querySelector(`.memory-grid .card[data-idx="${h.suggestion.index}"]`);
+          if(card) card.classList.add('hint');
+          hintEl.innerText = h.text || ('Try card ' + h.suggestion.index);
+        }
+        if(h.game === 'snake' && h.suggestion.dir){
+          hintEl.innerText = h.text || ('Try direction: ' + h.suggestion.dir);
+          // optionally draw small indicator on canvas by emitting an overlay event (simple: change canvas border)
+          const cvs = document.getElementById('snakeCanvas');
+          if(cvs){
+            cvs.style.boxShadow = '0 0 0 4px rgba(43,124,255,0.12)';
+            setTimeout(()=>{ cvs.style.boxShadow=''; }, 700);
+          }
+        }
+      } else if(h.text){
+        hintEl.innerText = h.text;
+      }
+    }
+
+    // sendAction updated to include local state and to apply returned hint
+    function sendAction(payload){
+      hintEl.innerText = 'sent...';
+      if(socket){
+        socket.emit('player_action', { action: payload });
+      } else {
+        fetch('/send_action', {
+          method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action: payload })
+        }).then(r=>r.json()).then(d => { displayHint(d.hint || d); }).catch(()=>{ hintEl.innerText=''; });
+      }
+    }
+
+    // ---------- Tic Tac Toe renderer (with state passed to AI) ----------
+    function renderTicTacToe(parent){
+      const board = document.createElement('div');
+      board.className = 'board';
+      const cells = [];
+      for(let i=0;i<9;i++){
+        const c = document.createElement('div');
+        c.className = 'cell';
+        c.dataset.index = i;
+        c.addEventListener('click', () => {
+          if(c.innerText) return;
+          c.innerText = 'X';
+          const state = cells.map(s => s.innerText || '');
+          sendAction({ game:'tictactoe', move:i, mark:'X', board: state });
+          checkWin();
+          setTimeout(aiMove, 250);
+        });
+        board.appendChild(c);
+        cells.push(c);
+      }
+      parent.appendChild(board);
+
+      function aiMove(){
+        const empty = cells.filter(x=>!x.innerText);
+        if(empty.length===0) return;
+        const choice = empty[Math.floor(Math.random()*empty.length)];
+        choice.innerText = 'O';
+        const state = cells.map(s => s.innerText || '');
+        sendAction({ game:'tictactoe', mark:'O', board: state });
+        checkWin();
+      }
+
+      function checkWin(){
+        const combos = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+        for(const [a,b,c] of combos){
+          if(cells[a].innerText && cells[a].innerText===cells[b].innerText && cells[a].innerText===cells[c].innerText){
+            alert(cells[a].innerText + ' wins!');
+            cells.forEach(x=>x.innerText='');
+            clearHints();
+            return;
+          }
+        }
+        if(cells.every(x=>x.innerText)) { alert('Draw!'); cells.forEach(x=>x.innerText=''); clearHints(); }
+      }
+    }
+
+    // ---------- Memory placeholder (passes visible state to AI) ----------
+    function renderMemory(parent){
+      const grid = document.createElement('div');
+      grid.className = 'memory-grid';
+      const values = shuffle([1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8]);
+      let flipped = [];
+      const cards = [];
+
+      for(let i=0;i<16;i++){
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.dataset.idx = i;
+        card.dataset.val = values[i];
+        card.addEventListener('click', () => {
+          if(card.innerText || flipped.length===2) return;
+          card.innerText = card.dataset.val;
+          flipped.push(card);
+          // send current visible state (which cards are revealed)
+          const visible = cards.map(c => c.innerText || '');
+          sendAction({ game:'memory', flip:i, visible: visible });
+          if(flipped.length===2){
+            setTimeout(() => {
+              if(flipped[0].dataset.val === flipped[1].dataset.val){
+                flipped = [];
+                clearHints();
+              } else {
+                flipped.forEach(c=>c.innerText='');
+                flipped = [];
+                clearHints();
+              }
+            }, 600);
+          }
+        });
+        grid.appendChild(card);
+        cards.push(card);
+      }
+
+      parent.appendChild(grid);
+
+      function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]] } return a; }
+    }
+
+    // ---------- Snake placeholder (passes head/dir to AI) ----------
+    function renderSnake(parent){
+      const canvas = document.createElement('canvas');
+      canvas.id = 'snakeCanvas';
+      canvas.width = 300; canvas.height = 200;
+      parent.appendChild(canvas);
+      const ctx = canvas.getContext('2d');
+      let snake = [{x:5,y:5}];
+      let dir = {x:1,y:0};
+      let food = spawnFood();
+      draw();
+
+      document.addEventListener('keydown', e => {
+        if(e.key==='ArrowUp') dir = {x:0,y:-1};
+        if(e.key==='ArrowDown') dir = {x:0,y:1};
+        if(e.key==='ArrowLeft') dir = {x:-1,y:0};
+        if(e.key==='ArrowRight') dir = {x:1,y:0};
+        sendAction({ game:'snake', dir: dir, head: snake[0] });
+      });
+
+      const loop = setInterval(() => {
+        const head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
+        head.x = (head.x+30)%30; head.y = (head.y+20)%20;
+        snake.unshift(head);
+        if(head.x===food.x && head.y===food.y){
+          food = spawnFood();
+          sendAction({ game:'snake', ate:true, head });
+        } else snake.pop();
+        draw();
+      }, 140);
+
+      function spawnFood(){ return { x: Math.floor(Math.random()*30), y: Math.floor(Math.random()*20) }; }
+
+      function draw(){
+        ctx.fillStyle = '#000'; ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle = '#0f0'; snake.forEach(p => ctx.fillRect(p.x*10, p.y*10, 9,9));
+        ctx.fillStyle = '#f00'; ctx.fillRect(food.x*10, food.y*10, 9,9);
+      }
+    }
+
+  });
+  </script>
+</body>
+</html>
